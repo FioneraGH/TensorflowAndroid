@@ -23,18 +23,22 @@ class MainActivity : BaseActivity() {
     private var classifier: Classifier? = null
     private var executor = Executors.newSingleThreadExecutor()
 
+    private var lock = false
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
 
         cv_preview.setCameraListener(object : CameraListener() {
             override fun onPictureTaken(jpeg: ByteArray) {
+                lock = false
+
                 val bitmap = Bitmap.createScaledBitmap(
                         BitmapFactory.decodeByteArray(jpeg, 0, jpeg.size),
                         INPUT_SIZE,
                         INPUT_SIZE,
                         false)
-                iv_preview.setImageBitmap(bitmap);
+                iv_preview.setImageBitmap(bitmap)
 
                 val results = classifier?.recognizeImage(bitmap)
                 tv_result.text = results?.toString()
@@ -46,6 +50,10 @@ class MainActivity : BaseActivity() {
         }
 
         btn_detect.setOnClickListener {
+            if (lock) {
+                return@setOnClickListener
+            }
+            lock = true
             cv_preview.captureImage()
         }
 
