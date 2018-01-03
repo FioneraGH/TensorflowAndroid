@@ -3,8 +3,8 @@ package com.fionera.tensorflow
 import android.graphics.Bitmap
 import android.graphics.BitmapFactory
 import android.os.Bundle
-import com.flurgle.camerakit.CameraListener
 import kotlinx.android.synthetic.main.activity_main.*
+import java.io.ByteArrayOutputStream
 import java.util.concurrent.Executors
 
 class MainActivity : BaseActivity() {
@@ -29,8 +29,21 @@ class MainActivity : BaseActivity() {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
 
-        cv_preview.setCameraListener(object : CameraListener() {
-            override fun onPictureTaken(jpeg: ByteArray) {
+        btn_swap.setOnClickListener {
+            cv_preview.toggleFacing()
+        }
+
+        btn_detect.setOnClickListener {
+            if (lock) {
+                return@setOnClickListener
+            }
+            lock = true
+            cv_preview.captureImage {
+                var jpeg: ByteArray? = null
+                val baos = ByteArrayOutputStream()
+                it.bitmap.compress(Bitmap.CompressFormat.PNG, 100, baos);
+                jpeg = baos.toByteArray()
+
                 lock = false
 
                 val bitmap = Bitmap.createScaledBitmap(
@@ -43,18 +56,6 @@ class MainActivity : BaseActivity() {
                 val results = classifier?.recognizeImage(bitmap)
                 tv_result.text = results?.toString()
             }
-        })
-
-        btn_swap.setOnClickListener {
-            cv_preview.toggleFacing()
-        }
-
-        btn_detect.setOnClickListener {
-            if (lock) {
-                return@setOnClickListener
-            }
-            lock = true
-            cv_preview.captureImage()
         }
 
         initTensorFlow()
